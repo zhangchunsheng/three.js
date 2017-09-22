@@ -4,8 +4,8 @@ Utility for converting model files to the Three.js JSON format
 
 ## Supported Formats
 
-* Fbx (.fbx) (versions 7.3, 7.2, 7.1, 7.0, 6.1, and 6.0) (non-binary)
-* Collada (.dae) (1.5 and earlier) 
+* Fbx (.fbx)
+* Collada (.dae) 
 * Wavefront/Alias (.obj)
 * 3D Studio Max (.3ds)
 
@@ -15,24 +15,14 @@ Utility for converting model files to the Three.js JSON format
 convert_to_threejs.py [source_file] [output_file] [options]
 
 Options:
-  -t, --triangulate     force quad geometry into triangles
-  -p, --prefix          prefix object names in the output file
-  -g, --geometry-only   output geometry only
-  -c, --default-camera  include a default camera in the output scene
-  -l, --defualt-light   include a default light in the output scene
-  -x, --no-textures     don't include texture references in the output file
+  -t, --triangulate       force non-triangle geometry into triangles
+  -x, --ignore-textures   don't include texture references in output file
+  -u, --force-prefix      prefix all object names in output file to ensure uniqueness
+  -f, --flatten-scene     merge all geometries and apply node transforms
+  -c, --add-camera        include default camera in output scene
+  -l, --add-light         include default light in output scene
+  -p, --pretty-print      prefix all object names in output file
 ```
-
-## Supported Features
-
-* Object Hierarchies
-* Lights (Ambient, Point, Directional)
-* Cameras (Perspective, Ortho)
-* Geometries (Triangles, Quads, Nurbs)
-* Materials (Phong, Lambert)
-* Textures (Diffuse, Emissive, Ambient, Specular, Normal, Bump)
-* Multiple UV layers
-* Multiple materials per mesh
 
 ## Current Limitations
 
@@ -41,6 +31,7 @@ Options:
 * Some camera properties are not converted correctly
 * Some light properties are not converted correctly
 * Some material properties are not converted correctly
+* Textures must be put in asset's folder, and use relative path in the material
 
 ## Dependencies
 
@@ -57,8 +48,22 @@ Don't forget the visit the FBX SDK documentation website:
   http://docs.autodesk.com/FBX/2013/ENU/FBX-SDK-Documentation/cpp_ref/index.html
 ```
 
+*Note:* If you use the OSX installer, it will install the Python packages into the following folder.
+
+```
+/Applications/Autodesk/FBX Python SDK/[VERSION]/lib/
+```
+
+If the tool still can't find the FBX SDK, you may need to copy the `fbx.so`, `FbxCommon.py` and `sip.so` files into your site_packages folder. 
+
+If you don't know your site_packages folder, run `python` from shell and paste this:
+
+```py
+import site; site.getsitepackages()
+```
+
 ### Python
-* Requires Python 2.6 or 3.1 (The FBX SDK requires one of these versions)
+* Requires Python 2.6, 2.7 or 3.1 (The FBX SDK requires one of these versions)
 
 ``` bash
 sudo apt-get install build-essential

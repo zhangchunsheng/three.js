@@ -1,3 +1,6 @@
+import { Material } from './Material';
+import { Color } from '../math/Color';
+
 /**
  * @author alteredq / http://alteredqualia.com/
  *
@@ -6,90 +9,45 @@
  *  opacity: <float>,
  *  map: new THREE.Texture( <Image> ),
  *
- *  blending: THREE.NormalBlending,
- *  depthTest: <bool>,
- *  depthWrite: <bool>,
- *
- *  useScreenCoordinates: <bool>,
- *  sizeAttenuation: <bool>,
- *  scaleByViewport: <bool>,
- *  alignment: THREE.SpriteAlignment.center,
- *
  *	uvOffset: new THREE.Vector2(),
- *	uvScale: new THREE.Vector2(),
- *
- *  fog: <bool>
+ *	uvScale: new THREE.Vector2()
  * }
  */
 
-THREE.SpriteMaterial = function ( parameters ) {
+function SpriteMaterial( parameters ) {
 
-	THREE.Material.call( this );
+	Material.call( this );
 
-	// defaults
+	this.type = 'SpriteMaterial';
 
-	this.color = new THREE.Color( 0xffffff );
-	this.map = new THREE.Texture();
+	this.color = new Color( 0xffffff );
+	this.map = null;
 
-	this.useScreenCoordinates = true;
-	this.depthTest = !this.useScreenCoordinates;
-	this.sizeAttenuation = !this.useScreenCoordinates;
-	this.scaleByViewport = !this.sizeAttenuation;
-	this.alignment = THREE.SpriteAlignment.center.clone();
+	this.rotation = 0;
 
 	this.fog = false;
-
-	this.uvOffset = new THREE.Vector2( 0, 0 );
-	this.uvScale  = new THREE.Vector2( 1, 1 );
-
-	// set parameters
+	this.lights = false;
 
 	this.setValues( parameters );
 
-	// override coupled defaults if not specified explicitly by parameters
+}
 
-	parameters = parameters || {};
+SpriteMaterial.prototype = Object.create( Material.prototype );
+SpriteMaterial.prototype.constructor = SpriteMaterial;
+SpriteMaterial.prototype.isSpriteMaterial = true;
 
-	if ( parameters.depthTest === undefined ) this.depthTest = !this.useScreenCoordinates;
-	if ( parameters.sizeAttenuation === undefined ) this.sizeAttenuation = !this.useScreenCoordinates;
-	if ( parameters.scaleByViewport === undefined ) this.scaleByViewport = !this.sizeAttenuation;
+SpriteMaterial.prototype.copy = function ( source ) {
 
-};
+	Material.prototype.copy.call( this, source );
 
-THREE.SpriteMaterial.prototype = Object.create( THREE.Material.prototype );
+	this.color.copy( source.color );
+	this.map = source.map;
 
-THREE.SpriteMaterial.prototype.clone = function () {
+	this.rotation = source.rotation;
 
-	var material = new THREE.SpriteMaterial();
-
-	THREE.Material.prototype.clone.call( this, material );
-
-	material.color.copy( this.color );
-	material.map = this.map;
-
-	material.useScreenCoordinates = this.useScreenCoordinates;
-	material.sizeAttenuation = this.sizeAttenuation;
-	material.scaleByViewport = this.scaleByViewport;
-	material.alignment.copy( this.alignment );
-
-	material.uvOffset.copy( this.uvOffset );
-	material.uvScale.copy( this.uvScale );
-
-	material.fog = this.fog;
-
-	return material;
+	return this;
 
 };
 
-// Alignment enums
 
-THREE.SpriteAlignment = {};
-THREE.SpriteAlignment.topLeft = new THREE.Vector2( 1, -1 );
-THREE.SpriteAlignment.topCenter = new THREE.Vector2( 0, -1 );
-THREE.SpriteAlignment.topRight = new THREE.Vector2( -1, -1 );
-THREE.SpriteAlignment.centerLeft = new THREE.Vector2( 1, 0 );
-THREE.SpriteAlignment.center = new THREE.Vector2( 0, 0 );
-THREE.SpriteAlignment.centerRight = new THREE.Vector2( -1, 0 );
-THREE.SpriteAlignment.bottomLeft = new THREE.Vector2( 1, 1 );
-THREE.SpriteAlignment.bottomCenter = new THREE.Vector2( 0, 1 );
-THREE.SpriteAlignment.bottomRight = new THREE.Vector2( -1, 1 );
+export { SpriteMaterial };

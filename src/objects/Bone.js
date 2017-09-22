@@ -1,57 +1,26 @@
+import { Object3D } from '../core/Object3D';
+
 /**
  * @author mikael emtinger / http://gomo.se/
  * @author alteredq / http://alteredqualia.com/
+ * @author ikerr / http://verold.com
  */
 
-THREE.Bone = function( belongsToSkin ) {
+function Bone() {
 
-	THREE.Object3D.call( this );
+	Object3D.call( this );
 
-	this.skin = belongsToSkin;
-	this.skinMatrix = new THREE.Matrix4();
+	this.type = 'Bone';
 
-};
+}
 
-THREE.Bone.prototype = Object.create( THREE.Object3D.prototype );
+Bone.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
-THREE.Bone.prototype.update = function ( parentSkinMatrix, forceUpdate ) {
+	constructor: Bone,
 
-	// update local
+	isBone: true
 
-	if ( this.matrixAutoUpdate ) {
+} );
 
-		forceUpdate |= this.updateMatrix();
 
-	}
-
-	// update skin matrix
-
-	if ( forceUpdate || this.matrixWorldNeedsUpdate ) {
-
-		if( parentSkinMatrix ) {
-
-			this.skinMatrix.multiplyMatrices( parentSkinMatrix, this.matrix );
-
-		} else {
-
-			this.skinMatrix.copy( this.matrix );
-
-		}
-
-		this.matrixWorldNeedsUpdate = false;
-		forceUpdate = true;
-
-	}
-
-	// update children
-
-	var child, i, l = this.children.length;
-
-	for ( i = 0; i < l; i ++ ) {
-
-		this.children[ i ].update( this.skinMatrix, forceUpdate );
-
-	}
-
-};
-
+export { Bone };

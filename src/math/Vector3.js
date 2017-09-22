@@ -1,29 +1,43 @@
+import { _Math } from './Math';
+import { Matrix4 } from './Matrix4';
+import { Quaternion } from './Quaternion';
+
 /**
  * @author mrdoob / http://mrdoob.com/
- * @author *kile / http://kile.stravaganza.org/
+ * @author kile / http://kile.stravaganza.org/
  * @author philogb / http://blog.thejit.org/
  * @author mikael emtinger / http://gomo.se/
  * @author egraether / http://egraether.com/
  * @author WestLangley / http://github.com/WestLangley
  */
 
-THREE.Vector3 = function ( x, y, z ) {
+function Vector3( x, y, z ) {
 
 	this.x = x || 0;
 	this.y = y || 0;
 	this.z = z || 0;
 
-};
+}
 
-THREE.Vector3.prototype = {
+Object.assign( Vector3.prototype, {
 
-	constructor: THREE.Vector3,
+	isVector3: true,
 
 	set: function ( x, y, z ) {
 
 		this.x = x;
 		this.y = y;
 		this.z = z;
+
+		return this;
+
+	},
+
+	setScalar: function ( scalar ) {
+
+		this.x = scalar;
+		this.y = scalar;
+		this.z = scalar;
 
 		return this;
 
@@ -60,9 +74,11 @@ THREE.Vector3.prototype = {
 			case 0: this.x = value; break;
 			case 1: this.y = value; break;
 			case 2: this.z = value; break;
-			default: throw new Error( "index is out of range: " + index );
+			default: throw new Error( 'index is out of range: ' + index );
 
 		}
+
+		return this;
 
 	},
 
@@ -73,9 +89,15 @@ THREE.Vector3.prototype = {
 			case 0: return this.x;
 			case 1: return this.y;
 			case 2: return this.z;
-			default: throw new Error( "index is out of range: " + index );
+			default: throw new Error( 'index is out of range: ' + index );
 
 		}
+
+	},
+
+	clone: function () {
+
+		return new this.constructor( this.x, this.y, this.z );
 
 	},
 
@@ -93,7 +115,7 @@ THREE.Vector3.prototype = {
 
 		if ( w !== undefined ) {
 
-			console.warn( 'DEPRECATED: Vector3\'s .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .add() now only accepts one argument. Use .addVectors( a, b ) instead.' );
 			return this.addVectors( v, w );
 
 		}
@@ -126,11 +148,21 @@ THREE.Vector3.prototype = {
 
 	},
 
+	addScaledVector: function ( v, s ) {
+
+		this.x += v.x * s;
+		this.y += v.y * s;
+		this.z += v.z * s;
+
+		return this;
+
+	},
+
 	sub: function ( v, w ) {
 
 		if ( w !== undefined ) {
 
-			console.warn( 'DEPRECATED: Vector3\'s .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .sub() now only accepts one argument. Use .subVectors( a, b ) instead.' );
 			return this.subVectors( v, w );
 
 		}
@@ -138,6 +170,16 @@ THREE.Vector3.prototype = {
 		this.x -= v.x;
 		this.y -= v.y;
 		this.z -= v.z;
+
+		return this;
+
+	},
+
+	subScalar: function ( s ) {
+
+		this.x -= s;
+		this.y -= s;
+		this.z -= s;
 
 		return this;
 
@@ -157,7 +199,7 @@ THREE.Vector3.prototype = {
 
 		if ( w !== undefined ) {
 
-			console.warn( 'DEPRECATED: Vector3\'s .multiply() now only accepts one argument. Use .multiplyVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .multiply() now only accepts one argument. Use .multiplyVectors( a, b ) instead.' );
 			return this.multiplyVectors( v, w );
 
 		}
@@ -190,17 +232,44 @@ THREE.Vector3.prototype = {
 
 	},
 
+	applyEuler: function () {
+
+		var quaternion = new Quaternion();
+
+		return function applyEuler( euler ) {
+
+			if ( ! ( euler && euler.isEuler ) ) {
+
+				console.error( 'THREE.Vector3: .applyEuler() now expects an Euler rotation rather than a Vector3 and order.' );
+
+			}
+
+			return this.applyQuaternion( quaternion.setFromEuler( euler ) );
+
+		};
+
+	}(),
+
+	applyAxisAngle: function () {
+
+		var quaternion = new Quaternion();
+
+		return function applyAxisAngle( axis, angle ) {
+
+			return this.applyQuaternion( quaternion.setFromAxisAngle( axis, angle ) );
+
+		};
+
+	}(),
+
 	applyMatrix3: function ( m ) {
 
-		var x = this.x;
-		var y = this.y;
-		var z = this.z;
-
+		var x = this.x, y = this.y, z = this.z;
 		var e = m.elements;
 
-		this.x = e[0] * x + e[3] * y + e[6] * z;
-		this.y = e[1] * x + e[4] * y + e[7] * z;
-		this.z = e[2] * x + e[5] * y + e[8] * z;
+		this.x = e[ 0 ] * x + e[ 3 ] * y + e[ 6 ] * z;
+		this.y = e[ 1 ] * x + e[ 4 ] * y + e[ 7 ] * z;
+		this.z = e[ 2 ] * x + e[ 5 ] * y + e[ 8 ] * z;
 
 		return this;
 
@@ -208,32 +277,14 @@ THREE.Vector3.prototype = {
 
 	applyMatrix4: function ( m ) {
 
-		// input: THREE.Matrix4 affine matrix
-
 		var x = this.x, y = this.y, z = this.z;
-
 		var e = m.elements;
 
-		this.x = e[0] * x + e[4] * y + e[8]  * z + e[12];
-		this.y = e[1] * x + e[5] * y + e[9]  * z + e[13];
-		this.z = e[2] * x + e[6] * y + e[10] * z + e[14];
+		var w = 1 / ( e[ 3 ] * x + e[ 7 ] * y + e[ 11 ] * z + e[ 15 ] );
 
-		return this;
-
-	},
-
-	applyProjection: function ( m ) {
-
-		// input: THREE.Matrix4 projection matrix
-
-		var x = this.x, y = this.y, z = this.z;
-
-		var e = m.elements;
-		var d = 1 / ( e[3] * x + e[7] * y + e[11] * z + e[15] ); // perspective divide
-
-		this.x = ( e[0] * x + e[4] * y + e[8]  * z + e[12] ) * d;
-		this.y = ( e[1] * x + e[5] * y + e[9]  * z + e[13] ) * d;
-		this.z = ( e[2] * x + e[6] * y + e[10] * z + e[14] ) * d;
+		this.x = ( e[ 0 ] * x + e[ 4 ] * y + e[ 8 ]  * z + e[ 12 ] ) * w;
+		this.y = ( e[ 1 ] * x + e[ 5 ] * y + e[ 9 ]  * z + e[ 13 ] ) * w;
+		this.z = ( e[ 2 ] * x + e[ 6 ] * y + e[ 10 ] * z + e[ 14 ] ) * w;
 
 		return this;
 
@@ -241,31 +292,51 @@ THREE.Vector3.prototype = {
 
 	applyQuaternion: function ( q ) {
 
-		var x = this.x;
-		var y = this.y;
-		var z = this.z;
-
-		var qx = q.x;
-		var qy = q.y;
-		var qz = q.z;
-		var qw = q.w;
+		var x = this.x, y = this.y, z = this.z;
+		var qx = q.x, qy = q.y, qz = q.z, qw = q.w;
 
 		// calculate quat * vector
 
 		var ix =  qw * x + qy * z - qz * y;
 		var iy =  qw * y + qz * x - qx * z;
 		var iz =  qw * z + qx * y - qy * x;
-		var iw = -qx * x - qy * y - qz * z;
+		var iw = - qx * x - qy * y - qz * z;
 
 		// calculate result * inverse quat
 
-		this.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
-		this.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
-		this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+		this.x = ix * qw + iw * - qx + iy * - qz - iz * - qy;
+		this.y = iy * qw + iw * - qy + iz * - qx - ix * - qz;
+		this.z = iz * qw + iw * - qz + ix * - qy - iy * - qx;
 
 		return this;
 
 	},
+
+	project: function () {
+
+		var matrix = new Matrix4();
+
+		return function project( camera ) {
+
+			matrix.multiplyMatrices( camera.projectionMatrix, matrix.getInverse( camera.matrixWorld ) );
+			return this.applyMatrix4( matrix );
+
+		};
+
+	}(),
+
+	unproject: function () {
+
+		var matrix = new Matrix4();
+
+		return function unproject( camera ) {
+
+			matrix.multiplyMatrices( camera.matrixWorld, matrix.getInverse( camera.projectionMatrix ) );
+			return this.applyMatrix4( matrix );
+
+		};
+
+	}(),
 
 	transformDirection: function ( m ) {
 
@@ -273,16 +344,13 @@ THREE.Vector3.prototype = {
 		// vector interpreted as a direction
 
 		var x = this.x, y = this.y, z = this.z;
-
 		var e = m.elements;
 
-		this.x = e[0] * x + e[4] * y + e[8]  * z;
-		this.y = e[1] * x + e[5] * y + e[9]  * z;
-		this.z = e[2] * x + e[6] * y + e[10] * z;
+		this.x = e[ 0 ] * x + e[ 4 ] * y + e[ 8 ]  * z;
+		this.y = e[ 1 ] * x + e[ 5 ] * y + e[ 9 ]  * z;
+		this.z = e[ 2 ] * x + e[ 6 ] * y + e[ 10 ] * z;
 
-		this.normalize();
-
-		return this;
+		return this.normalize();
 
 	},
 
@@ -298,45 +366,15 @@ THREE.Vector3.prototype = {
 
 	divideScalar: function ( scalar ) {
 
-		if ( scalar !== 0 ) {
-
-			var invScalar = 1 / scalar;
-
-			this.x *= invScalar;
-			this.y *= invScalar;
-			this.z *= invScalar;
-
-		} else {
-
-			this.x = 0;
-			this.y = 0;
-			this.z = 0;
-
-		}
-
-		return this;
+		return this.multiplyScalar( 1 / scalar );
 
 	},
 
 	min: function ( v ) {
 
-		if ( this.x > v.x ) {
-
-			this.x = v.x;
-
-		}
-
-		if ( this.y > v.y ) {
-
-			this.y = v.y;
-
-		}
-
-		if ( this.z > v.z ) {
-
-			this.z = v.z;
-
-		}
+		this.x = Math.min( this.x, v.x );
+		this.y = Math.min( this.y, v.y );
+		this.z = Math.min( this.z, v.z );
 
 		return this;
 
@@ -344,23 +382,9 @@ THREE.Vector3.prototype = {
 
 	max: function ( v ) {
 
-		if ( this.x < v.x ) {
-
-			this.x = v.x;
-
-		}
-
-		if ( this.y < v.y ) {
-
-			this.y = v.y;
-
-		}
-
-		if ( this.z < v.z ) {
-
-			this.z = v.z;
-
-		}
+		this.x = Math.max( this.x, v.x );
+		this.y = Math.max( this.y, v.y );
+		this.z = Math.max( this.z, v.z );
 
 		return this;
 
@@ -368,37 +392,75 @@ THREE.Vector3.prototype = {
 
 	clamp: function ( min, max ) {
 
-		// This function assumes min < max, if this assumption isn't true it will not operate correctly
+		// assumes min < max, componentwise
 
-		if ( this.x < min.x ) {
+		this.x = Math.max( min.x, Math.min( max.x, this.x ) );
+		this.y = Math.max( min.y, Math.min( max.y, this.y ) );
+		this.z = Math.max( min.z, Math.min( max.z, this.z ) );
 
-			this.x = min.x;
+		return this;
 
-		} else if ( this.x > max.x ) {
+	},
 
-			this.x = max.x;
+	clampScalar: function () {
 
-		}
+		var min = new Vector3();
+		var max = new Vector3();
 
-		if ( this.y < min.y ) {
+		return function clampScalar( minVal, maxVal ) {
 
-			this.y = min.y;
+			min.set( minVal, minVal, minVal );
+			max.set( maxVal, maxVal, maxVal );
 
-		} else if ( this.y > max.y ) {
+			return this.clamp( min, max );
 
-			this.y = max.y;
+		};
 
-		}
+	}(),
 
-		if ( this.z < min.z ) {
+	clampLength: function ( min, max ) {
 
-			this.z = min.z;
+		var length = this.length();
 
-		} else if ( this.z > max.z ) {
+		return this.divideScalar( length || 1 ).multiplyScalar( Math.max( min, Math.min( max, length ) ) );
 
-			this.z = max.z;
+	},
 
-		}
+	floor: function () {
+
+		this.x = Math.floor( this.x );
+		this.y = Math.floor( this.y );
+		this.z = Math.floor( this.z );
+
+		return this;
+
+	},
+
+	ceil: function () {
+
+		this.x = Math.ceil( this.x );
+		this.y = Math.ceil( this.y );
+		this.z = Math.ceil( this.z );
+
+		return this;
+
+	},
+
+	round: function () {
+
+		this.x = Math.round( this.x );
+		this.y = Math.round( this.y );
+		this.z = Math.round( this.z );
+
+		return this;
+
+	},
+
+	roundToZero: function () {
+
+		this.x = ( this.x < 0 ) ? Math.ceil( this.x ) : Math.floor( this.x );
+		this.y = ( this.y < 0 ) ? Math.ceil( this.y ) : Math.floor( this.y );
+		this.z = ( this.z < 0 ) ? Math.ceil( this.z ) : Math.floor( this.z );
 
 		return this;
 
@@ -406,7 +468,11 @@ THREE.Vector3.prototype = {
 
 	negate: function () {
 
-		return this.multiplyScalar( - 1 );
+		this.x = - this.x;
+		this.y = - this.y;
+		this.z = - this.z;
+
+		return this;
 
 	},
 
@@ -415,6 +481,8 @@ THREE.Vector3.prototype = {
 		return this.x * v.x + this.y * v.y + this.z * v.z;
 
 	},
+
+	// TODO lengthSquared?
 
 	lengthSq: function () {
 
@@ -436,20 +504,13 @@ THREE.Vector3.prototype = {
 
 	normalize: function () {
 
-		return this.divideScalar( this.length() );
+		return this.divideScalar( this.length() || 1 );
 
 	},
 
-	setLength: function ( l ) {
+	setLength: function ( length ) {
 
-		var oldLength = this.length();
-
-		if ( oldLength !== 0 && l !== oldLength  ) {
-
-			this.multiplyScalar( l / oldLength );
-		}
-
-		return this;
+		return this.normalize().multiplyScalar( length );
 
 	},
 
@@ -463,11 +524,17 @@ THREE.Vector3.prototype = {
 
 	},
 
+	lerpVectors: function ( v1, v2, alpha ) {
+
+		return this.subVectors( v2, v1 ).multiplyScalar( alpha ).add( v1 );
+
+	},
+
 	cross: function ( v, w ) {
 
 		if ( w !== undefined ) {
 
-			console.warn( 'DEPRECATED: Vector3\'s .cross() now only accepts one argument. Use .crossVectors( a, b ) instead.' );
+			console.warn( 'THREE.Vector3: .cross() now only accepts one argument. Use .crossVectors( a, b ) instead.' );
 			return this.crossVectors( v, w );
 
 		}
@@ -484,21 +551,61 @@ THREE.Vector3.prototype = {
 
 	crossVectors: function ( a, b ) {
 
-		this.x = a.y * b.z - a.z * b.y;
-		this.y = a.z * b.x - a.x * b.z;
-		this.z = a.x * b.y - a.y * b.x;
+		var ax = a.x, ay = a.y, az = a.z;
+		var bx = b.x, by = b.y, bz = b.z;
+
+		this.x = ay * bz - az * by;
+		this.y = az * bx - ax * bz;
+		this.z = ax * by - ay * bx;
 
 		return this;
 
 	},
 
+	projectOnVector: function ( vector ) {
+
+		var scalar = vector.dot( this ) / vector.lengthSq();
+
+		return this.copy( vector ).multiplyScalar( scalar );
+
+	},
+
+	projectOnPlane: function () {
+
+		var v1 = new Vector3();
+
+		return function projectOnPlane( planeNormal ) {
+
+			v1.copy( this ).projectOnVector( planeNormal );
+
+			return this.sub( v1 );
+
+		};
+
+	}(),
+
+	reflect: function () {
+
+		// reflect incident vector off plane orthogonal to normal
+		// normal is assumed to have unit length
+
+		var v1 = new Vector3();
+
+		return function reflect( normal ) {
+
+			return this.sub( v1.copy( normal ).multiplyScalar( 2 * this.dot( normal ) ) );
+
+		};
+
+	}(),
+
 	angleTo: function ( v ) {
 
-		var theta = this.dot( v ) / ( this.length() * v.length() );
+		var theta = this.dot( v ) / ( Math.sqrt( this.lengthSq() * v.lengthSq() ) );
 
 		// clamp, to handle numerical problems
 
-		return Math.acos( THREE.Math.clamp( theta, -1, 1 ) );
+		return Math.acos( _Math.clamp( theta, - 1, 1 ) );
 
 	},
 
@@ -510,60 +617,69 @@ THREE.Vector3.prototype = {
 
 	distanceToSquared: function ( v ) {
 
-		var dx = this.x - v.x;
-		var dy = this.y - v.y;
-		var dz = this.z - v.z;
+		var dx = this.x - v.x, dy = this.y - v.y, dz = this.z - v.z;
 
 		return dx * dx + dy * dy + dz * dz;
 
 	},
 
-	setEulerFromRotationMatrix: function ( m, order ) {
+	distanceToManhattan: function ( v ) {
 
-		console.error( "REMOVED: Vector3\'s setEulerFromRotationMatrix has been removed in favor of Euler.setFromRotationMatrix(), please update your code.");
-
-	},
-
-	setEulerFromQuaternion: function ( q, order ) {
-
-		console.error( "REMOVED: Vector3\'s setEulerFromQuaternion: has been removed in favor of Euler.setFromQuaternion(), please update your code.");
+		return Math.abs( this.x - v.x ) + Math.abs( this.y - v.y ) + Math.abs( this.z - v.z );
 
 	},
 
-	getPositionFromMatrix: function ( m ) {
+	setFromSpherical: function ( s ) {
 
-		this.x = m.elements[12];
-		this.y = m.elements[13];
-		this.z = m.elements[14];
+		var sinPhiRadius = Math.sin( s.phi ) * s.radius;
+
+		this.x = sinPhiRadius * Math.sin( s.theta );
+		this.y = Math.cos( s.phi ) * s.radius;
+		this.z = sinPhiRadius * Math.cos( s.theta );
 
 		return this;
 
 	},
 
-	getScaleFromMatrix: function ( m ) {
+	setFromCylindrical: function ( c ) {
 
-		var sx = this.set( m.elements[0], m.elements[1], m.elements[2] ).length();
-		var sy = this.set( m.elements[4], m.elements[5], m.elements[6] ).length();
-		var sz = this.set( m.elements[8], m.elements[9], m.elements[10] ).length();
+		this.x = c.radius * Math.sin( c.theta );
+		this.y = c.y;
+		this.z = c.radius * Math.cos( c.theta );
+
+		return this;
+
+	},
+
+	setFromMatrixPosition: function ( m ) {
+
+		var e = m.elements;
+
+		this.x = e[ 12 ];
+		this.y = e[ 13 ];
+		this.z = e[ 14 ];
+
+		return this;
+
+	},
+
+	setFromMatrixScale: function ( m ) {
+
+		var sx = this.setFromMatrixColumn( m, 0 ).length();
+		var sy = this.setFromMatrixColumn( m, 1 ).length();
+		var sz = this.setFromMatrixColumn( m, 2 ).length();
 
 		this.x = sx;
 		this.y = sy;
 		this.z = sz;
 
 		return this;
+
 	},
 
-	getColumnFromMatrix: function ( index, matrix ) {
+	setFromMatrixColumn: function ( m, index ) {
 
-		var offset = index * 4;
-
-		var me = matrix.elements;
-
-		this.x = me[ offset ];
-		this.y = me[ offset + 1 ];
-		this.z = me[ offset + 2 ];
-
-		return this;
+		return this.fromArray( m.elements, index * 4 );
 
 	},
 
@@ -573,108 +689,48 @@ THREE.Vector3.prototype = {
 
 	},
 
-	fromArray: function ( array ) {
+	fromArray: function ( array, offset ) {
 
-		this.x = array[ 0 ];
-		this.y = array[ 1 ];
-		this.z = array[ 2 ];
+		if ( offset === undefined ) offset = 0;
+
+		this.x = array[ offset ];
+		this.y = array[ offset + 1 ];
+		this.z = array[ offset + 2 ];
 
 		return this;
 
 	},
 
-	toArray: function () {
+	toArray: function ( array, offset ) {
 
-		return [ this.x, this.y, this.z ];
+		if ( array === undefined ) array = [];
+		if ( offset === undefined ) offset = 0;
+
+		array[ offset ] = this.x;
+		array[ offset + 1 ] = this.y;
+		array[ offset + 2 ] = this.z;
+
+		return array;
 
 	},
 
-	clone: function () {
+	fromBufferAttribute: function ( attribute, index, offset ) {
 
-		return new THREE.Vector3( this.x, this.y, this.z );
+		if ( offset !== undefined ) {
+
+			console.warn( 'THREE.Vector3: offset has been removed from .fromBufferAttribute().' );
+
+		}
+
+		this.x = attribute.getX( index );
+		this.y = attribute.getY( index );
+		this.z = attribute.getZ( index );
+
+		return this;
 
 	}
 
-};
-
-THREE.extend( THREE.Vector3.prototype, {
-
-	applyEuler: function () {
-
-		var q1 = new THREE.Quaternion();
-
-		return function ( rotation ) {
-
-			if( typeof rotation['order'] === undefined ) {
-				console.error( 'ERROR: Vector3\'s .applyEuler() now expects a Euler rotation rather than a Vector3 and order.  Please update your code.' );
-			}
-
-			var quaternion = q1.setFromEuler( rotation );
-
-			this.applyQuaternion( quaternion );
-
-			return this;
-
-		};
-
-	}(),
-
-	applyAxisAngle: function () {
-
-		var q1 = new THREE.Quaternion();
-
-		return function ( axis, angle ) {
-
-			var quaternion = q1.setFromAxisAngle( axis, angle );
-
-			this.applyQuaternion( quaternion );
-
-			return this;
-
-		};
-
-	}(),
-
-	projectOnVector: function () {
-
-		var v1 = new THREE.Vector3();
-
-		return function ( vector ) {
-
-			v1.copy( vector ).normalize();
-			var d = this.dot( v1 );
-			return this.copy( v1 ).multiplyScalar( d );
-
-		};
-
-	}(),
-
-	projectOnPlane: function () {
-
-		var v1 = new THREE.Vector3();
-
-		return function ( planeNormal ) {
-
-			v1.copy( this ).projectOnVector( planeNormal );
-
-			return this.sub( v1 );
-
-		}
-
-	}(),
-
-	reflect: function () {
-
-		var v1 = new THREE.Vector3();
-
-		return function ( vector ) {
-
-		    v1.copy( this ).projectOnVector( vector ).multiplyScalar( 2 );
-
-		    return this.subVectors( v1, this );
-
-		}
-
-	}()
-
 } );
+
+
+export { Vector3 };

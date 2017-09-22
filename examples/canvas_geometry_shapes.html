@@ -23,9 +23,13 @@
 	<body>
 		<canvas id="debug" style="position:absolute; left:100px"></canvas>
 
-		<div id="info"><a href="http://threejs.org" target="_blank">three.js</a> - shape geometry</div>
+		<div id="info"><a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - shape geometry</div>
 
-		<script src="../build/three.min.js"></script>
+		<script src="../build/three.js"></script>
+
+		<script src="js/renderers/Projector.js"></script>
+		<script src="js/renderers/CanvasRenderer.js"></script>
+
 		<script src="js/libs/stats.min.js"></script>
 
 		<script>
@@ -34,7 +38,7 @@
 
 			var camera, scene, renderer;
 
-			var text, plane;
+			var group, text, plane;
 
 			var targetRotation = 0;
 			var targetRotationOnMouseDown = 0;
@@ -57,34 +61,37 @@
 				camera.position.set( 0, 150, 500 );
 
 				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xf0f0f0 );
 
-				parent = new THREE.Object3D();
-				parent.position.y = 50;
-				scene.add( parent );
+				group = new THREE.Group();
+				group.position.y = 50;
+				scene.add( group );
 
 				function addShape( shape, color, x, y, z, rx, ry, rz, s ) {
 
 					// flat shape
 
 					var geometry = new THREE.ShapeGeometry( shape );
-					var material = new THREE.MeshBasicMaterial( { color: color, overdraw: true } );
+					var material = new THREE.MeshBasicMaterial( { color: color, overdraw: 0.5 } );
 
 					var mesh = new THREE.Mesh( geometry, material );
 					mesh.position.set( x, y, z );
 					mesh.rotation.set( rx, ry, rz );
 					mesh.scale.set( s, s, s );
-					parent.add( mesh );
+					group.add( mesh );
 
 					// line
 
 					var geometry = shape.createPointsGeometry();
+					geometry.vertices.push( geometry.vertices[ 0 ].clone() );
+
 					var material = new THREE.LineBasicMaterial( { linewidth: 10, color: 0x333333, transparent: true } );
 
 					var line = new THREE.Line( geometry, material );
 					line.position.set( x, y, z );
 					line.rotation.set( rx, ry, rz );
 					line.scale.set( s, s, s );
-					parent.add( line );
+					group.add( line );
 
 				}
 
@@ -286,16 +293,14 @@
 
 				//
 
-				renderer = new THREE.CanvasRenderer( { antialias: true } );
+				renderer = new THREE.CanvasRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.sortObjects = false;
 				renderer.sortElements = false;
 				container.appendChild( renderer.domElement );
 
 				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.top = '0px';
-				container.appendChild( stats.domElement );
+				container.appendChild( stats.dom );
 
 				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
 				document.addEventListener( 'touchstart', onDocumentTouchStart, false );
@@ -397,7 +402,7 @@
 
 			function render() {
 
-				parent.rotation.y += ( targetRotation - parent.rotation.y ) * 0.05;
+				group.rotation.y += ( targetRotation - group.rotation.y ) * 0.05;
 				renderer.render( scene, camera );
 
 			}
